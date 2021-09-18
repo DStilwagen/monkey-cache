@@ -1,6 +1,8 @@
 # 🐒Cache
 Easily cache any data structure for a specific amount of time in any .NET application.
 
+This is a custom fork that changes the platform support to be only a .NET Standard 2.0 library to use with .NET Maui which Xamarin is evolving into.
+
 Monkey Cache is comprised of one core package (MonkeyCache) and three providers which reference the core package as a dependency. At least one provider must be installed for Monkey Cache to work and each offer the same API (IBarrel). Depending on your existing application you may already have SQLite or LiteDB installed so these would be your natural choice. A lightweight file based Monkey Cache is also provided if you aren't already using one of these options.
 
 Listen to our podcast [Merge Conflict: Episode 76](http://www.mergeconflict.fm/76) for an overview of Monkey Cache and it's creation.
