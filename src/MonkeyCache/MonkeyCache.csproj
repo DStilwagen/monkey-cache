@@ -15,7 +15,7 @@
 		<Owners>James Montemagno</Owners>
 		<PackageProjectUrl>https://github.com/jamesmontemagno/monkey-cache</PackageProjectUrl>
 		<Summary>A simple caching library to cache any data structure for a specific amount of time in any .NET application. Requires backend MonkeyCache package to be installed.</Summary>
-		<PackageTags>xamarin, windows, ios, android, cache, http</PackageTags>
+		<PackageTags>xamarin, windows, ios, android, cache, http, maui</PackageTags>
 		<Title>🐒 MonkeyCache.Core - A .NET Caching Library</Title>
 		<Description>A simple caching library to cache any data structure for a specific amount of time in any .NET application. Additionally, offers simple HTTP methods for caching web request data.</Description>
 		<Copyright>2020 Refractored LLC &amp; James Montemagno</Copyright>
