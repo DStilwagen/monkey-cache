@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+
 using LiteDB;
-using Newtonsoft.Json;
+
 
 namespace MonkeyCache.LiteDB
 {
@@ -43,7 +45,7 @@ namespace MonkeyCache.LiteDB
 			return instance;
 		}
 
-		readonly JsonSerializerSettings jsonSettings;
+		readonly JsonSerializerOptions jsonOptions;
 		Barrel(string cacheDirectory = null)
 		{
 			var directory = string.IsNullOrEmpty(cacheDirectory) ? baseCacheDir.Value : cacheDirectory;
@@ -60,7 +62,7 @@ namespace MonkeyCache.LiteDB
 			else
 				path = $"Filename={path}; Mode=Exclusive";
 #else
-			
+
 			if (!string.IsNullOrWhiteSpace(EncryptionKey))
 				path = $"Filename={path}; Password={EncryptionKey}";
 #endif
@@ -68,11 +70,13 @@ namespace MonkeyCache.LiteDB
 			db = new LiteDatabase(path);
 			col = db.GetCollection<Banana>();
 
-			jsonSettings = new JsonSerializerSettings
+			jsonOptions = new JsonSerializerOptions
 			{
-				ObjectCreationHandling = ObjectCreationHandling.Replace,
-				ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-				TypeNameHandling = TypeNameHandling.All,
+				//ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+				ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+
+				//ObjectCreationHandling = ObjectCreationHandling.Replace,	//Default Behavior
+				//TypeNameHandling = TypeNameHandling.All,					//Not Supported
 			};
 		}
 
@@ -147,9 +151,9 @@ namespace MonkeyCache.LiteDB
 		/// Gets the data entry for the specified key.
 		/// </summary>
 		/// <param name="key">Unique identifier for the entry to get</param>
-		/// <param name="jsonSerializationSettings">Custom json serialization settings to use</param>
+		/// <param name="jsonSerializationOptions">Custom json serialization settings to use</param>
 		/// <returns>The data object that was stored if found, else default(T)</returns>
-		public T Get<T>(string key, JsonSerializerSettings jsonSerializationSettings = null)
+		public T Get<T>(string key, JsonSerializerOptions jsonSerializationOptions = null)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentException("Key can not be null or empty.", nameof(key));
@@ -167,7 +171,7 @@ namespace MonkeyCache.LiteDB
 				return (T)final;
 			}
 
-			return JsonConvert.DeserializeObject<T>(ent.Contents, jsonSerializationSettings ?? jsonSettings);
+			return System.Text.Json.JsonSerializer.Deserialize<T>(ent.Contents, jsonSerializationOptions ?? jsonOptions);
 		}
 
 
@@ -243,8 +247,8 @@ namespace MonkeyCache.LiteDB
 		/// <param name="data">Data object to store</param>
 		/// <param name="expireIn">Time from UtcNow to expire entry in</param>
 		/// <param name="eTag">Optional eTag information</param>
-		/// <param name="jsonSerializationSettings">Custom json serialization settings to use</param>
-		public void Add<T>(string key, T data, TimeSpan expireIn, string eTag = null, JsonSerializerSettings jsonSerializationSettings = null)
+		/// <param name="jsonSerializationOptions">Custom json serialization settings to use</param>
+		public void Add<T>(string key, T data, TimeSpan expireIn, string eTag = null, JsonSerializerOptions jsonSerializationOptions = null)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentException("Key can not be null or empty.", nameof(key));
@@ -260,7 +264,7 @@ namespace MonkeyCache.LiteDB
 			}
 			else
 			{
-				dataJson = JsonConvert.SerializeObject(data, jsonSerializationSettings ?? jsonSettings);
+				dataJson = System.Text.Json.JsonSerializer.Serialize(data, jsonSerializationOptions ?? jsonOptions);
 			}
 
 			Add(key, dataJson, expireIn, eTag);

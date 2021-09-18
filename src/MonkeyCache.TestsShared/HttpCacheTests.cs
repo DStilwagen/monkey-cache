@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
+
 
 namespace MonkeyCache.Tests
 {
-   
+
     [TestClass]
     public partial class HttpCacheTests
     {
         IBarrel barrel;
         string url;
-        
+
         [TestInitialize]
         public void Setup()
         {

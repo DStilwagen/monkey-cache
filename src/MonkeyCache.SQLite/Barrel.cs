@@ -2,8 +2,9 @@
 using System.IO;
 using System.Linq;
 using SQLite;
-using Newtonsoft.Json;
+
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace MonkeyCache.SQLite
 {
@@ -35,7 +36,7 @@ namespace MonkeyCache.SQLite
 		public static IBarrel Create(string cacheDirectory)
 			=> new Barrel(cacheDirectory);
 
-		readonly JsonSerializerSettings jsonSettings;
+		readonly JsonSerializerOptions jsonOptions;
 		Barrel(string cacheDirectory = null)
 		{
 			var directory = string.IsNullOrEmpty(cacheDirectory) ? baseCacheDir.Value : cacheDirectory;
@@ -48,11 +49,13 @@ namespace MonkeyCache.SQLite
 			db = new SQLiteConnection(path, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex);
 			db.CreateTable<Banana>();
 
-			jsonSettings = new JsonSerializerSettings
+			jsonOptions = new JsonSerializerOptions
 			{
-				ObjectCreationHandling = ObjectCreationHandling.Replace,
-				ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-				TypeNameHandling = TypeNameHandling.All,
+				//ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+				ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+
+				//ObjectCreationHandling = ObjectCreationHandling.Replace,	//Default Behavior
+				//TypeNameHandling = TypeNameHandling.All,					//Not Supported
 			};
 		}
 
@@ -85,7 +88,7 @@ namespace MonkeyCache.SQLite
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentException("Key can not be null or empty.", nameof(key));
-			
+
 			Banana ent;
 			lock (dblock)
 			{
@@ -139,9 +142,9 @@ namespace MonkeyCache.SQLite
 		/// Gets the data entry for the specified key.
 		/// </summary>
 		/// <param name="key">Unique identifier for the entry to get</param>
-		/// <param name="jsonSerializationSettings">Custom json serialization settings to use</param>
+		/// <param name="jsonSerializationOptions">Custom json serialization settings to use</param>
 		/// <returns>The data object that was stored if found, else default(T)</returns>
-		public T Get<T>(string key, JsonSerializerSettings jsonSerializationSettings = null)
+		public T Get<T>(string key, JsonSerializerOptions jsonSerializationOptions = null)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentException("Key can not be null or empty.", nameof(key));
@@ -164,7 +167,7 @@ namespace MonkeyCache.SQLite
 			}
 
 
-			return JsonConvert.DeserializeObject<T>(ent.Contents, jsonSerializationSettings ?? jsonSettings);
+			return JsonSerializer.Deserialize<T>(ent.Contents, jsonSerializationOptions ?? jsonOptions);
 		}
 
 		/// <summary>
@@ -244,8 +247,8 @@ namespace MonkeyCache.SQLite
 		/// <param name="data">Data object to store</param>
 		/// <param name="expireIn">Time from UtcNow to expire entry in</param>
 		/// <param name="eTag">Optional eTag information</param>
-		/// <param name="jsonSerializationSettings">Custom json serialization settings to use</param>
-		public void Add<T>(string key, T data, TimeSpan expireIn, string eTag = null, JsonSerializerSettings jsonSerializationSettings = null)
+		/// <param name="jsonSerializationOptions">Custom json serialization settings to use</param>
+		public void Add<T>(string key, T data, TimeSpan expireIn, string eTag = null, JsonSerializerOptions jsonSerializationOptions = null)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentException("Key can not be null or empty.", nameof(key));
@@ -262,7 +265,7 @@ namespace MonkeyCache.SQLite
 			}
 			else
 			{
-				dataJson = JsonConvert.SerializeObject(data, jsonSerializationSettings ?? jsonSettings);
+				dataJson = JsonSerializer.Serialize(data, jsonSerializationOptions ?? jsonOptions);
 			}
 
 			Add(key, dataJson, expireIn, eTag);

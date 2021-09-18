@@ -4,15 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
-using Newtonsoft.Json;
+
 
 namespace MonkeyCache.FileStore
 {
 	public class Barrel : IBarrel
 	{
 		ReaderWriterLockSlim indexLocker;
-		readonly JsonSerializerSettings jsonSettings;
+		readonly JsonSerializerOptions jsonOptions;
 		Lazy<string> baseDirectory;
 
 		Barrel(string cacheDirectory = null)
@@ -26,11 +27,13 @@ namespace MonkeyCache.FileStore
 
 			indexLocker = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
-			jsonSettings = new JsonSerializerSettings
+			jsonOptions = new JsonSerializerOptions
 			{
-				ObjectCreationHandling = ObjectCreationHandling.Replace,
-				ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-				TypeNameHandling = TypeNameHandling.All,
+				//ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+				ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve,
+
+				//ObjectCreationHandling = ObjectCreationHandling.Replace,	//Default Behavior
+				//TypeNameHandling = TypeNameHandling.All,					//Not Supported
 			};
 
 			index = new Dictionary<string, Tuple<string, DateTime>>();
@@ -92,12 +95,12 @@ namespace MonkeyCache.FileStore
 		/// <param name="data">Data object to store</param>
 		/// <param name="expireIn">Time from UtcNow to expire entry in</param>
 		/// <param name="eTag">Optional eTag information</param>
-		/// <param name="jsonSerializationSettings">Custom json serialization settings to use</param>
-		public void Add<T>(string key, 
-							T data, 
-							TimeSpan expireIn, 
+		/// <param name="jsonSerializationOptions">Custom json serialization settings to use</param>
+		public void Add<T>(string key,
+							T data,
+							TimeSpan expireIn,
 							string eTag = null,
-							JsonSerializerSettings jsonSerializationSettings = null)
+							JsonSerializerOptions jsonSerializationOptions = null)
 		{
 
 			if (string.IsNullOrWhiteSpace(key))
@@ -114,7 +117,7 @@ namespace MonkeyCache.FileStore
 			}
 			else
 			{
-				dataJson = JsonConvert.SerializeObject(data, jsonSerializationSettings ?? jsonSettings);
+				dataJson = JsonSerializer.Serialize(data, jsonSerializationOptions ?? jsonOptions);
 			}
 
 			Add(key, dataJson, expireIn, eTag);
@@ -284,9 +287,9 @@ namespace MonkeyCache.FileStore
 		/// Gets the data entry for the specified key.
 		/// </summary>
 		/// <param name="key">Unique identifier for the entry to get</param>
-		/// <param name="jsonSerializationSettings">Custom json serialization settings to use</param>
+		/// <param name="jsonSerializationOptions">Custom json serialization settings to use</param>
 		/// <returns>The data object that was stored if found, else default(T)</returns>
-		public T Get<T>(string key, JsonSerializerSettings jsonSerializationSettings = null)
+		public T Get<T>(string key, JsonSerializerOptions jsonSerializationOptions = null)
 		{
 			if (string.IsNullOrWhiteSpace(key))
 				throw new ArgumentException("Key can not be null or empty.", nameof(key));
@@ -309,7 +312,7 @@ namespace MonkeyCache.FileStore
 						return (T)final;
 					}
 
-					result = JsonConvert.DeserializeObject<T>(contents, jsonSerializationSettings ?? jsonSettings);
+					result = JsonSerializer.Deserialize<T>(contents, jsonSerializationOptions ?? jsonOptions);
 				}
 			}
 			finally

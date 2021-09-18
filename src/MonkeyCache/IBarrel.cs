@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿
 using System;
 using System.Collections.Generic;
-
+using System.Text.Json;
 namespace MonkeyCache
 {
 	/// <summary>
@@ -22,8 +22,8 @@ namespace MonkeyCache
 		/// <param name="data">Data to store of type T</param>
 		/// <param name="expireIn">How long in the future the item should expire</param>
 		/// <param name="eTag">eTag to use if needed</param>
-		/// <param name="jsonSerializationSettings">Specific json serialization to use</param>
-		void Add<T>(string key, T data, TimeSpan expireIn, string eTag = null, JsonSerializerSettings jsonSerializationSettings = null);
+		/// <param name="jsonSerializationOptions">Specific json serialization to use</param>
+		void Add<T>(string key, T data, TimeSpan expireIn, string eTag = null, JsonSerializerOptions jsonSerializationOptions = null);
 
 		/// <summary>
 		/// Empty a set of keys
@@ -60,12 +60,12 @@ namespace MonkeyCache
 		/// </summary>
 		/// <typeparam name="T">Type of object to get</typeparam>
 		/// <param name="key">Key to use</param>
-		/// <param name="jsonSettings">json serialization settings to use.</param>
+		/// <param name="jsonOptions">json serialization settings to use.</param>
 		/// <returns>The object back if it exists, else null</returns>
 		/// <remarks>
 		/// When AutoExpire is set to true, Get<T> will return NULL if the item is expired
 		/// </remarks>
-		T Get<T>(string key, JsonSerializerSettings jsonSettings = null);
+		T Get<T>(string key, JsonSerializerOptions jsonOptions = null);
 
 		/// <summary>
 		/// Get the eTag for a key

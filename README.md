@@ -94,7 +94,7 @@ async Task<IEnumerable<Monkey>> GetMonkeysAsync()
 
     var client = new HttpClient();
     var json = await client.GetStringAsync(url);
-    var monkeys = JsonConvert.DeserializeObject<IEnumerable<Monkey>>(json);
+    var monkeys = JsonSerializer.Deserialize<IEnumerable<Monkey>>(json);
 
     //Saves the cache and pass it a timespan for expiration
     Barrel.Current.Add(key: url, data: monkeys, expireIn: TimeSpan.FromDays(1));
@@ -122,7 +122,7 @@ public async Task<T> GetAsync<T>(string url, int days = 7, bool forceRefresh = f
             json = await client.GetStringAsync(url);
             Barrel.Current.Add(url, json, TimeSpan.FromDays(days));
         }
-        return JsonConvert.DeserializeObject<T>(json);
+        return JsonSerializer.Deserialize<T>(json);
     }
     catch (Exception ex)
     {
@@ -159,7 +159,7 @@ Task<IEnumerable<Monkey>> GetMonkeysAsync()
     //Dev handle online/offline scenario
    
 	var result = await HttpCache.Current.GetCachedAsync(barrel, url, TimeSpan.FromSeconds(60), TimeSpan.FromDays(1));
-    return JsonConvert.DeserializeObject<IEnumerable<Monkey>>(result);
+    return JsonSerializer.Deserialize<IEnumerable<Monkey>>(result);
 }
 ```
 

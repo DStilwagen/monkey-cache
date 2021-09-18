@@ -9,43 +9,43 @@ namespace MonkeyCache.Tests
     using System;
     using System.Net;
     using System.Collections.Generic;
+	using System.Text.Json;
+	using System.Text.Json.Serialization;
 
-    using Newtonsoft.Json;
-
-    public partial class Monkey
+	public partial class Monkey
     {
-        [JsonProperty("Details")]
+        [JsonPropertyName("Details")]
         public string Details { get; set; }
 
-        [JsonProperty("Image")]
+        [JsonPropertyName("Image")]
         public string Image { get; set; }
 
-        [JsonProperty("Location")]
+        [JsonPropertyName("Location")]
         public string Location { get; set; }
 
-        [JsonProperty("Name")]
+        [JsonPropertyName("Name")]
         public string Name { get; set; }
 
-        [JsonProperty("Population")]
+        [JsonPropertyName("Population")]
         public long Population { get; set; }
     }
 
     public partial class Monkey
     {
-        public static Monkey[] FromJson(string json) => JsonConvert.DeserializeObject<Monkey[]>(json, Converter.Settings);
+        public static Monkey[] FromJson(string json) => JsonSerializer.Deserialize<Monkey[]>(json, Converter.Settings);
     }
 
     public static class Serialize
     {
-        public static string ToJson(this Monkey[] self) => JsonConvert.SerializeObject(self, Converter.Settings);
+        public static string ToJson(this Monkey[] self) => JsonSerializer.Serialize(self, Converter.Settings);
     }
 
     public class Converter
     {
-        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        public static readonly JsonSerializerOptions Settings = new JsonSerializerOptions
         {
-            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
-            DateParseHandling = DateParseHandling.None,
+            //MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            //DateParseHandling = DateParseHandling.None,
         };
     }
 }
